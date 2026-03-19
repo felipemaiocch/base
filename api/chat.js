@@ -1,5 +1,5 @@
 const { getKnowledgeBase, getKnowledgeBaseChunks } = require('../lib/db');
-const { normalizeHistory, buildSystemPrompt, requestAiCompletion, resolveAiConfig } = require('../lib/chat');
+const { normalizeHistory, buildPromptHistory, buildSystemPrompt, requestAiCompletion, resolveAiConfig } = require('../lib/chat');
 const { NO_INFO_REPLY, selectRelevantKnowledgeChunks } = require('../lib/knowledge-base');
 const { parseJsonBody, sendJson, methodNotAllowed } = require('../lib/http');
 
@@ -18,6 +18,7 @@ module.exports = async (req, res) => {
     const body = await parseJsonBody(req);
     const message = typeof body.message === 'string' ? body.message.trim() : '';
     const history = normalizeHistory(body.history);
+    const promptHistory = buildPromptHistory(body.history);
 
     if (!message) {
       sendJson(res, 400, { error: 'Mensagem vazia.' });
@@ -44,7 +45,7 @@ module.exports = async (req, res) => {
 
     const reply = await requestAiCompletion([
       buildSystemPrompt(selectedKnowledge.contextText),
-      ...history,
+      ...promptHistory,
       { role: 'user', content: message },
     ]);
 

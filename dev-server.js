@@ -4,7 +4,7 @@ const path = require('path');
 require('dotenv').config();
 
 const { ensureSchema, getKnowledgeBase, getKnowledgeBaseChunks, saveKnowledgeBase } = require('./lib/db');
-const { buildSystemPrompt, normalizeHistory, requestAiCompletion, resolveAiConfig } = require('./lib/chat');
+const { buildPromptHistory, buildSystemPrompt, normalizeHistory, requestAiCompletion, resolveAiConfig } = require('./lib/chat');
 const { NO_INFO_REPLY, selectRelevantKnowledgeChunks } = require('./lib/knowledge-base');
 const { parseJsonBody, sendJson } = require('./lib/http');
 const {
@@ -145,6 +145,7 @@ async function handleRequest(req, res) {
     const body = await parseJsonBody(req);
     const message = typeof body.message === 'string' ? body.message.trim() : '';
     const history = normalizeHistory(body.history);
+    const promptHistory = buildPromptHistory(body.history);
 
     if (!message) {
       sendJson(res, 400, { error: 'Mensagem vazia.' });
@@ -171,7 +172,7 @@ async function handleRequest(req, res) {
 
     const reply = await requestAiCompletion([
       buildSystemPrompt(selectedKnowledge.contextText),
-      ...history,
+      ...promptHistory,
       { role: 'user', content: message },
     ]);
 
