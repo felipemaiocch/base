@@ -15,6 +15,7 @@ module.exports = async (req, res) => {
         content: knowledgeBase.value,
         updatedAt: knowledgeBase.updated_at,
         chunkCount: knowledgeBase.chunk_count,
+        retrieval: knowledgeBase.retrieval,
       });
       return;
     }
@@ -30,6 +31,7 @@ module.exports = async (req, res) => {
         ok: true,
         updatedAt: knowledgeBase.updated_at,
         chunkCount: knowledgeBase.chunk_count,
+        retrieval: knowledgeBase.retrieval,
       });
       return;
     }

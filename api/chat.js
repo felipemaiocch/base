@@ -1,6 +1,7 @@
 const { getKnowledgeBase, getKnowledgeBaseChunks } = require('../lib/db');
 const { normalizeHistory, buildPromptHistory, buildSystemPrompt, requestAiCompletion, resolveAiConfig } = require('../lib/chat');
-const { NO_INFO_REPLY, selectRelevantKnowledgeChunks } = require('../lib/knowledge-base');
+const { NO_INFO_REPLY } = require('../lib/knowledge-base');
+const { selectRelevantKnowledgeChunks } = require('../lib/retrieval');
 const { parseJsonBody, sendJson, methodNotAllowed } = require('../lib/http');
 
 module.exports = async (req, res) => {
@@ -36,7 +37,7 @@ module.exports = async (req, res) => {
     }
 
     const chunks = await getKnowledgeBaseChunks();
-    const selectedKnowledge = selectRelevantKnowledgeChunks(chunks, message, history);
+    const selectedKnowledge = await selectRelevantKnowledgeChunks(chunks, message, history);
 
     if (selectedKnowledge.selectedChunks.length === 0) {
       sendJson(res, 200, { reply: NO_INFO_REPLY });
@@ -49,7 +50,10 @@ module.exports = async (req, res) => {
       { role: 'user', content: message },
     ]);
 
-    sendJson(res, 200, { reply });
+    sendJson(res, 200, {
+      reply,
+      retrievalMode: selectedKnowledge.retrievalMode || 'lexical',
+    });
   } catch (error) {
     console.error(error);
     sendJson(res, 500, { error: error.message || 'Erro interno do servidor.' });

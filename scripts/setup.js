@@ -50,6 +50,11 @@ function buildEnvContent(config) {
     'GROQ_API_KEY',
     'AI_GATEWAY_API_KEY',
     'AI_GATEWAY_MODEL',
+    'AI_EMBEDDING_MODEL',
+    'OPENAI_API_KEY',
+    'OPENAI_EMBEDDING_MODEL',
+    'EMBEDDING_DIMENSIONS',
+    'EMBEDDING_BATCH_SIZE',
     'ADMIN_PASSWORD',
     'SESSION_SECRET',
     'GROQ_MODEL',
@@ -72,6 +77,23 @@ function main() {
       existing.AI_GATEWAY_MODEL ||
       process.env.AI_GATEWAY_MODEL ||
       'groq/llama-3.3-70b-versatile',
+    AI_EMBEDDING_MODEL:
+      existing.AI_EMBEDDING_MODEL ||
+      process.env.AI_EMBEDDING_MODEL ||
+      'openai/text-embedding-3-small',
+    OPENAI_API_KEY: existing.OPENAI_API_KEY || process.env.OPENAI_API_KEY || '',
+    OPENAI_EMBEDDING_MODEL:
+      existing.OPENAI_EMBEDDING_MODEL ||
+      process.env.OPENAI_EMBEDDING_MODEL ||
+      'text-embedding-3-small',
+    EMBEDDING_DIMENSIONS:
+      existing.EMBEDDING_DIMENSIONS ||
+      process.env.EMBEDDING_DIMENSIONS ||
+      '1536',
+    EMBEDDING_BATCH_SIZE:
+      existing.EMBEDDING_BATCH_SIZE ||
+      process.env.EMBEDDING_BATCH_SIZE ||
+      '32',
     ADMIN_PASSWORD: existing.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || randomSecret(18),
     SESSION_SECRET: existing.SESSION_SECRET || process.env.SESSION_SECRET || randomSecret(32),
     GROQ_MODEL: existing.GROQ_MODEL || process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',

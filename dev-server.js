@@ -5,7 +5,9 @@ require('dotenv').config();
 
 const { ensureSchema, getKnowledgeBase, getKnowledgeBaseChunks, saveKnowledgeBase } = require('./lib/db');
 const { buildPromptHistory, buildSystemPrompt, normalizeHistory, requestAiCompletion, resolveAiConfig } = require('./lib/chat');
-const { NO_INFO_REPLY, selectRelevantKnowledgeChunks } = require('./lib/knowledge-base');
+const { NO_INFO_REPLY } = require('./lib/knowledge-base');
+const { resolveEmbeddingConfig } = require('./lib/embeddings');
+const { selectRelevantKnowledgeChunks } = require('./lib/retrieval');
 const { parseJsonBody, sendJson } = require('./lib/http');
 const {
   safeEqual,
@@ -113,6 +115,7 @@ async function handleRequest(req, res) {
       content: knowledgeBase.value,
       updatedAt: knowledgeBase.updated_at,
       chunkCount: knowledgeBase.chunk_count,
+      retrieval: knowledgeBase.retrieval,
     });
     return;
   }
@@ -132,6 +135,7 @@ async function handleRequest(req, res) {
       ok: true,
       updatedAt: knowledgeBase.updated_at,
       chunkCount: knowledgeBase.chunk_count,
+      retrieval: knowledgeBase.retrieval,
     });
     return;
   }
@@ -163,7 +167,7 @@ async function handleRequest(req, res) {
     }
 
     const chunks = await getKnowledgeBaseChunks();
-    const selectedKnowledge = selectRelevantKnowledgeChunks(chunks, message, history);
+    const selectedKnowledge = await selectRelevantKnowledgeChunks(chunks, message, history);
 
     if (selectedKnowledge.selectedChunks.length === 0) {
       sendJson(res, 200, { reply: NO_INFO_REPLY });
@@ -176,7 +180,10 @@ async function handleRequest(req, res) {
       { role: 'user', content: message },
     ]);
 
-    sendJson(res, 200, { reply });
+    sendJson(res, 200, {
+      reply,
+      retrievalMode: selectedKnowledge.retrievalMode || 'lexical',
+    });
     return;
   }
 
@@ -189,17 +196,22 @@ async function handleRequest(req, res) {
         SESSION_SECRET: Boolean(process.env.SESSION_SECRET),
         GROQ_API_KEY: Boolean(process.env.GROQ_API_KEY),
         AI_GATEWAY_API_KEY: Boolean(process.env.AI_GATEWAY_API_KEY),
+        OPENAI_API_KEY: Boolean(process.env.OPENAI_API_KEY),
       },
       aiProvider: resolveAiConfig()?.baseUrl || null,
+      embeddingProvider: resolveEmbeddingConfig()?.provider || null,
     });
     return;
   }
 
   if (req.method === 'GET' && pathname === '/api/db-health') {
     await ensureSchema();
+    const knowledgeBase = await getKnowledgeBase();
     sendJson(res, 200, {
       ok: true,
       aiProvider: resolveAiConfig()?.baseUrl || null,
+      embeddingProvider: resolveEmbeddingConfig()?.provider || null,
+      retrieval: knowledgeBase.retrieval,
     });
     return;
   }

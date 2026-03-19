@@ -29,3 +29,15 @@ O comando `bootstrap` gera ou atualiza o `.env` sem apagar credenciais ja existe
 - `SESSION_SECRET`
 - `GROQ_API_KEY` ou `AI_GATEWAY_API_KEY`
 - `GROQ_MODEL` ou `AI_GATEWAY_MODEL`
+- `OPENAI_API_KEY` ou `AI_GATEWAY_API_KEY` para embeddings
+- `OPENAI_EMBEDDING_MODEL` ou `AI_EMBEDDING_MODEL`
+- `EMBEDDING_DIMENSIONS`
+- `EMBEDDING_BATCH_SIZE`
+
+## Embeddings
+
+- Sem `OPENAI_API_KEY` ou `AI_GATEWAY_API_KEY` valido para embeddings, o projeto continua em `busca lexical`.
+- Com embeddings configurados, o backend gera vetores para cada bloco salvo e passa a usar `busca hibrida com embeddings`.
+- Depois de adicionar a chave de embeddings na Vercel, abra o admin e clique em `Salvar base` uma vez para reindexar a base com vetores.
+- Se existirem `OPENAI_API_KEY` e `AI_GATEWAY_API_KEY` ao mesmo tempo, embeddings priorizam `OPENAI_API_KEY`.
+- Se usar `AI_GATEWAY_API_KEY`, o AI Gateway precisa estar funcional para embeddings no seu projeto. Se nao estiver, prefira `OPENAI_API_KEY`.

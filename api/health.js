@@ -1,4 +1,5 @@
 const { resolveAiConfig } = require('../lib/chat');
+const { resolveEmbeddingConfig } = require('../lib/embeddings');
 const { sendJson, methodNotAllowed } = require('../lib/http');
 
 module.exports = async (req, res) => {
@@ -13,11 +14,13 @@ module.exports = async (req, res) => {
     SESSION_SECRET: Boolean(process.env.SESSION_SECRET),
     GROQ_API_KEY: Boolean(process.env.GROQ_API_KEY),
     AI_GATEWAY_API_KEY: Boolean(process.env.AI_GATEWAY_API_KEY),
+    OPENAI_API_KEY: Boolean(process.env.OPENAI_API_KEY),
   };
 
   sendJson(res, 200, {
     ok: true,
     env,
     aiProvider: resolveAiConfig()?.baseUrl || null,
+    embeddingProvider: resolveEmbeddingConfig()?.provider || null,
   });
 };

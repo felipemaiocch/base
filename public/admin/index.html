@@ -18,6 +18,7 @@
 
       <div class="flex items-center gap-3">
         <span id="chunk-count" class="text-sm text-blue-200">Blocos ativos: 0</span>
+        <span id="retrieval-mode" class="text-sm text-emerald-200">Busca lexical</span>
         <span id="updated-at" class="text-sm text-slate-300">Ainda nao carregado</span>
         <button id="logout-btn" class="rounded-2xl border border-white/15 px-4 py-2 text-sm text-white transition hover:bg-white/10">
           Sair
@@ -50,6 +51,11 @@
           <li>Somente esta tela autenticada consegue ler e editar o conteudo.</li>
           <li>A autenticacao usa cookie HTTP-only, entao o JavaScript do navegador nao acessa a sessao.</li>
         </ul>
+
+        <div class="mt-5 rounded-2xl bg-slate-50 p-4">
+          <h3 class="text-sm font-semibold text-slate-900">Status da recuperacao</h3>
+          <p id="retrieval-detail" class="mt-2 text-sm text-slate-600">Ainda nao carregado.</p>
+        </div>
       </aside>
     </main>
   </div>
@@ -57,6 +63,8 @@
   <script>
     const knowledgeBaseInput = document.getElementById('knowledge-base');
     const chunkCount = document.getElementById('chunk-count');
+    const retrievalMode = document.getElementById('retrieval-mode');
+    const retrievalDetail = document.getElementById('retrieval-detail');
     const updatedAt = document.getElementById('updated-at');
     const statusMessage = document.getElementById('status-message');
     const saveBtn = document.getElementById('save-btn');
@@ -75,6 +83,20 @@
       return `Blocos ativos: ${total}`;
     }
 
+    function renderRetrieval(retrieval) {
+      const label = retrieval && retrieval.label ? retrieval.label : 'Busca lexical';
+      const provider = retrieval && retrieval.provider ? ` (${retrieval.provider})` : '';
+      retrievalMode.textContent = label + provider;
+
+      if (!retrieval) {
+        retrievalDetail.textContent = 'Ainda nao carregado.';
+        return;
+      }
+
+      const model = retrieval.model ? ` Modelo: ${retrieval.model}.` : '';
+      retrievalDetail.textContent = `${retrieval.message || 'Sem detalhes.'}${model}`;
+    }
+
     async function loadKnowledgeBase() {
       statusMessage.textContent = 'Carregando base...';
 
@@ -91,6 +113,7 @@
 
       knowledgeBaseInput.value = data.content || '';
       chunkCount.textContent = formatChunkCount(data.chunkCount);
+      renderRetrieval(data.retrieval);
       updatedAt.textContent = `Ultima atualizacao: ${formatDate(data.updatedAt)}`;
       statusMessage.textContent = '';
     }
@@ -121,6 +144,7 @@
         }
 
         chunkCount.textContent = formatChunkCount(data.chunkCount);
+        renderRetrieval(data.retrieval);
         updatedAt.textContent = `Ultima atualizacao: ${formatDate(data.updatedAt)}`;
         statusMessage.textContent = `Base salva com sucesso. ${Number(data.chunkCount || 0)} blocos ativos.`;
       } catch (error) {
