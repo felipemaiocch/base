@@ -141,6 +141,26 @@ app.post('/api/chat', async (req, res, next) => {
   }
 });
 
+app.get('/api/health', async (req, res, next) => {
+  try {
+    await ensureSchema();
+
+    res.json({
+      ok: true,
+      env: {
+        DATABASE_URL: Boolean(process.env.DATABASE_URL),
+        ADMIN_PASSWORD: Boolean(process.env.ADMIN_PASSWORD),
+        SESSION_SECRET: Boolean(process.env.SESSION_SECRET),
+        GROQ_API_KEY: Boolean(process.env.GROQ_API_KEY),
+        AI_GATEWAY_API_KEY: Boolean(process.env.AI_GATEWAY_API_KEY),
+      },
+      aiProvider: resolveAiConfig()?.baseUrl || null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.use((error, req, res, next) => {
   console.error(error);
   res.status(500).json({

@@ -2,12 +2,12 @@
   "name": "assistente-corporativo",
   "version": "1.0.0",
   "description": "Chat interno com base de conhecimento no Neon e area admin protegida.",
-  "main": "server.js",
+  "main": "dev-server.js",
   "scripts": {
     "setup": "node scripts/setup.js",
     "bootstrap": "npm run setup && npm start",
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node dev-server.js",
+    "dev": "node --watch dev-server.js"
   },
   "dependencies": {
     "dotenv": "^17.2.3",
