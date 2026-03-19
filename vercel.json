@@ -1,17 +1,35 @@
 {
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**/*",
+      "use": "@vercel/static"
+    }
+  ],
   "cleanUrls": true,
-  "rewrites": [
+  "routes": [
     {
-      "source": "/",
-      "destination": "/index.html"
+      "handle": "filesystem"
     },
     {
-      "source": "/admin",
-      "destination": "/admin/index.html"
+      "src": "^/$",
+      "dest": "/public"
     },
     {
-      "source": "/admin/login",
-      "destination": "/admin/login/index.html"
+      "src": "^/admin$",
+      "dest": "/public/admin"
+    },
+    {
+      "src": "^/admin/login$",
+      "dest": "/public/admin/login"
+    },
+    {
+      "src": "^/api/(.*)$",
+      "dest": "/api/$1.js"
     }
   ]
 }
