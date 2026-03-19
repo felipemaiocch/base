@@ -10,7 +10,8 @@ Chat publico com base de conhecimento privada no Neon e painel admin separado.
 - A chave da IA fica no backend.
 - O deploy na Vercel usa paginas estaticas + funcoes em `api/`.
 - O servidor local de desenvolvimento roda por `dev-server.js`.
-- `https://seu-dominio/api/health` ajuda a validar ambiente e conexao no deploy.
+- `https://seu-dominio/api/health` valida as envs e a funcao.
+- `https://seu-dominio/api/db-health` valida a conexao com o Neon.
 
 ## Comandos
 
