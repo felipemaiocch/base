@@ -3,8 +3,9 @@ const http = require('http');
 const path = require('path');
 require('dotenv').config();
 
-const { ensureSchema, getKnowledgeBase, saveKnowledgeBase } = require('./lib/db');
+const { ensureSchema, getKnowledgeBase, getKnowledgeBaseChunks, saveKnowledgeBase } = require('./lib/db');
 const { buildSystemPrompt, normalizeHistory, requestAiCompletion, resolveAiConfig } = require('./lib/chat');
+const { NO_INFO_REPLY, selectRelevantKnowledgeChunks } = require('./lib/knowledge-base');
 const { parseJsonBody, sendJson } = require('./lib/http');
 const {
   safeEqual,
@@ -111,6 +112,7 @@ async function handleRequest(req, res) {
     sendJson(res, 200, {
       content: knowledgeBase.value,
       updatedAt: knowledgeBase.updated_at,
+      chunkCount: knowledgeBase.chunk_count,
     });
     return;
   }
@@ -129,6 +131,7 @@ async function handleRequest(req, res) {
     sendJson(res, 200, {
       ok: true,
       updatedAt: knowledgeBase.updated_at,
+      chunkCount: knowledgeBase.chunk_count,
     });
     return;
   }
@@ -158,8 +161,16 @@ async function handleRequest(req, res) {
       return;
     }
 
+    const chunks = await getKnowledgeBaseChunks();
+    const selectedKnowledge = selectRelevantKnowledgeChunks(chunks, message, history);
+
+    if (selectedKnowledge.selectedChunks.length === 0) {
+      sendJson(res, 200, { reply: NO_INFO_REPLY });
+      return;
+    }
+
     const reply = await requestAiCompletion([
-      buildSystemPrompt(kbText),
+      buildSystemPrompt(selectedKnowledge.contextText),
       ...history,
       { role: 'user', content: message },
     ]);

@@ -14,6 +14,7 @@ module.exports = async (req, res) => {
       sendJson(res, 200, {
         content: knowledgeBase.value,
         updatedAt: knowledgeBase.updated_at,
+        chunkCount: knowledgeBase.chunk_count,
       });
       return;
     }
@@ -28,6 +29,7 @@ module.exports = async (req, res) => {
       sendJson(res, 200, {
         ok: true,
         updatedAt: knowledgeBase.updated_at,
+        chunkCount: knowledgeBase.chunk_count,
       });
       return;
     }

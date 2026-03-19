@@ -1,5 +1,6 @@
-const { getKnowledgeBase } = require('../lib/db');
+const { getKnowledgeBase, getKnowledgeBaseChunks } = require('../lib/db');
 const { normalizeHistory, buildSystemPrompt, requestAiCompletion, resolveAiConfig } = require('../lib/chat');
+const { NO_INFO_REPLY, selectRelevantKnowledgeChunks } = require('../lib/knowledge-base');
 const { parseJsonBody, sendJson, methodNotAllowed } = require('../lib/http');
 
 module.exports = async (req, res) => {
@@ -33,8 +34,16 @@ module.exports = async (req, res) => {
       return;
     }
 
+    const chunks = await getKnowledgeBaseChunks();
+    const selectedKnowledge = selectRelevantKnowledgeChunks(chunks, message, history);
+
+    if (selectedKnowledge.selectedChunks.length === 0) {
+      sendJson(res, 200, { reply: NO_INFO_REPLY });
+      return;
+    }
+
     const reply = await requestAiCompletion([
-      buildSystemPrompt(kbText),
+      buildSystemPrompt(selectedKnowledge.contextText),
       ...history,
       { role: 'user', content: message },
     ]);

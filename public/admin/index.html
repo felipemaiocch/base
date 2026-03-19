@@ -17,6 +17,7 @@
       </div>
 
       <div class="flex items-center gap-3">
+        <span id="chunk-count" class="text-sm text-blue-200">Blocos ativos: 0</span>
         <span id="updated-at" class="text-sm text-slate-300">Ainda nao carregado</span>
         <button id="logout-btn" class="rounded-2xl border border-white/15 px-4 py-2 text-sm text-white transition hover:bg-white/10">
           Sair
@@ -28,7 +29,7 @@
       <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="mb-4">
           <label for="knowledge-base" class="mb-2 block text-sm font-medium text-slate-700">Conteudo da base</label>
-          <p class="text-sm text-slate-500">Cole aqui politicas, argumentos de vendas, processos e qualquer texto que o assistente pode usar nas respostas.</p>
+          <p class="text-sm text-slate-500">Cole aqui politicas, argumentos de vendas, processos e qualquer texto que o assistente pode usar nas respostas. Ao salvar, o backend separa tudo em blocos automaticamente.</p>
         </div>
 
         <textarea id="knowledge-base" rows="22" class="w-full resize-y rounded-2xl border border-slate-300 px-4 py-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ex: Politica de troca, SLA do SAC, scripts de vendas, FAQ interno..."></textarea>
@@ -55,6 +56,7 @@
 
   <script>
     const knowledgeBaseInput = document.getElementById('knowledge-base');
+    const chunkCount = document.getElementById('chunk-count');
     const updatedAt = document.getElementById('updated-at');
     const statusMessage = document.getElementById('status-message');
     const saveBtn = document.getElementById('save-btn');
@@ -66,6 +68,11 @@
       }
 
       return new Date(value).toLocaleString('pt-BR');
+    }
+
+    function formatChunkCount(value) {
+      const total = Number(value || 0);
+      return `Blocos ativos: ${total}`;
     }
 
     async function loadKnowledgeBase() {
@@ -83,6 +90,7 @@
       }
 
       knowledgeBaseInput.value = data.content || '';
+      chunkCount.textContent = formatChunkCount(data.chunkCount);
       updatedAt.textContent = `Ultima atualizacao: ${formatDate(data.updatedAt)}`;
       statusMessage.textContent = '';
     }
@@ -112,8 +120,9 @@
           throw new Error(data.error || 'Nao foi possivel salvar a base.');
         }
 
+        chunkCount.textContent = formatChunkCount(data.chunkCount);
         updatedAt.textContent = `Ultima atualizacao: ${formatDate(data.updatedAt)}`;
-        statusMessage.textContent = 'Base salva com sucesso.';
+        statusMessage.textContent = `Base salva com sucesso. ${Number(data.chunkCount || 0)} blocos ativos.`;
       } catch (error) {
         statusMessage.textContent = error.message || 'Nao foi possivel salvar a base.';
       } finally {
