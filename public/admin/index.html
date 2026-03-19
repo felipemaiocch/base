@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Admin | Assistente Corporativo</title>
+  <link rel="icon" href="data:,">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-900">
+  <div class="mx-auto max-w-6xl px-4 py-6 md:py-10">
+    <header class="mb-6 flex flex-col gap-4 rounded-3xl bg-slate-950 px-6 py-6 text-white shadow-xl md:flex-row md:items-end md:justify-between">
+      <div>
+        <p class="mb-2 text-sm uppercase tracking-[0.25em] text-blue-300">Area administrativa</p>
+        <h1 class="text-3xl font-semibold">Base de conhecimento</h1>
+        <p class="mt-2 max-w-2xl text-sm text-slate-300">A base fica no Neon e so o backend usa esse conteudo para responder no chat publico. O usuario final nao enxerga esse texto.</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span id="updated-at" class="text-sm text-slate-300">Ainda nao carregado</span>
+        <button id="logout-btn" class="rounded-2xl border border-white/15 px-4 py-2 text-sm text-white transition hover:bg-white/10">
+          Sair
+        </button>
+      </div>
+    </header>
+
+    <main class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="mb-4">
+          <label for="knowledge-base" class="mb-2 block text-sm font-medium text-slate-700">Conteudo da base</label>
+          <p class="text-sm text-slate-500">Cole aqui politicas, argumentos de vendas, processos e qualquer texto que o assistente pode usar nas respostas.</p>
+        </div>
+
+        <textarea id="knowledge-base" rows="22" class="w-full resize-y rounded-2xl border border-slate-300 px-4 py-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ex: Politica de troca, SLA do SAC, scripts de vendas, FAQ interno..."></textarea>
+
+        <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <button id="save-btn" class="rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white transition hover:bg-blue-700">
+            Salvar base
+          </button>
+          <p id="status-message" class="text-sm text-slate-500"></p>
+        </div>
+      </section>
+
+      <aside class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 class="mb-3 text-lg font-semibold">Como ficou separado</h2>
+        <ul class="space-y-3 text-sm text-slate-600">
+          <li>O chat publico nao recebe a base nem a chave da IA no navegador.</li>
+          <li>O backend busca a base no Neon a cada requisicao de chat.</li>
+          <li>Somente esta tela autenticada consegue ler e editar o conteudo.</li>
+          <li>A autenticacao usa cookie HTTP-only, entao o JavaScript do navegador nao acessa a sessao.</li>
+        </ul>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const knowledgeBaseInput = document.getElementById('knowledge-base');
+    const updatedAt = document.getElementById('updated-at');
+    const statusMessage = document.getElementById('status-message');
+    const saveBtn = document.getElementById('save-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    function formatDate(value) {
+      if (!value) {
+        return 'Sem registro de atualizacao';
+      }
+
+      return new Date(value).toLocaleString('pt-BR');
+    }
+
+    async function loadKnowledgeBase() {
+      statusMessage.textContent = 'Carregando base...';
+
+      const response = await fetch('/api/admin/knowledge-base');
+      if (response.status === 401) {
+        window.location.href = '/admin/login';
+        return;
+      }
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Nao foi possivel carregar a base.');
+      }
+
+      knowledgeBaseInput.value = data.content || '';
+      updatedAt.textContent = `Ultima atualizacao: ${formatDate(data.updatedAt)}`;
+      statusMessage.textContent = '';
+    }
+
+    async function saveKnowledgeBase() {
+      statusMessage.textContent = 'Salvando...';
+      saveBtn.disabled = true;
+
+      try {
+        const response = await fetch('/api/admin/knowledge-base', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            content: knowledgeBaseInput.value
+          })
+        });
+
+        const data = await response.json();
+        if (response.status === 401) {
+          window.location.href = '/admin/login';
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Nao foi possivel salvar a base.');
+        }
+
+        updatedAt.textContent = `Ultima atualizacao: ${formatDate(data.updatedAt)}`;
+        statusMessage.textContent = 'Base salva com sucesso.';
+      } catch (error) {
+        statusMessage.textContent = error.message || 'Nao foi possivel salvar a base.';
+      } finally {
+        saveBtn.disabled = false;
+      }
+    }
+
+    async function logout() {
+      await fetch('/api/admin/logout', {
+        method: 'POST'
+      });
+      window.location.href = '/admin/login';
+    }
+
+    saveBtn.addEventListener('click', saveKnowledgeBase);
+    logoutBtn.addEventListener('click', logout);
+
+    loadKnowledgeBase().catch((error) => {
+      statusMessage.textContent = error.message || 'Nao foi possivel carregar a base.';
+    });
+  </script>
+</body>
+</html>

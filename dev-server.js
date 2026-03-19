@@ -38,7 +38,7 @@ function requireAdminApi(req, res, next) {
 }
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.get('/admin/login', (req, res) => {
@@ -47,11 +47,11 @@ app.get('/admin/login', (req, res) => {
     return;
   }
 
-  res.sendFile(path.join(__dirname, 'admin', 'login', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'admin', 'login', 'index.html'));
 });
 
 app.get('/admin', requireAdminPage, (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'admin', 'index.html'));
 });
 
 app.post('/api/admin/login', (req, res) => {
